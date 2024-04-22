@@ -41,8 +41,6 @@ class UserAdapter(private val viewModel: MainViewModel,
                 navigateToOneUser(user)
             }
 
-            // observe live data (the following list)
-
         }
     }
 

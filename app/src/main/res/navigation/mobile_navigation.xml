@@ -65,5 +65,18 @@
 <!--        <action-->
 <!--            android:id="@+id/action_one_user_to_settings_fragment"-->
 <!--            app:destination="@+id/settingsFragment" />-->
+        <action
+            android:id="@+id/action_one_user_to_chat_fragment"
+            app:destination="@id/chatFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="edu.utap.kal.view.ChatFragment"
+        android:label="Chatroom"
+        tools:layout="@layout/chatroom">
+        <argument
+            android:name="userCard"
+            app:argType="edu.utap.kal.UserCard" />
     </fragment>
 </navigation>

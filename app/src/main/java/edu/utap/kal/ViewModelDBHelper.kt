@@ -98,6 +98,47 @@ class ViewModelDBHelper() {
             }
     }
 
+
+    fun sendText(
+        text: Text,
+        textsList: MutableLiveData<List<Text>>,
+        userUID: String,
+        otherUID: String
+    ) {
+        var ref = db.collection(collectionUser).document(userUID)
+            .collection("Chats").document(otherUID)
+
+        ref.get()
+            .addOnSuccessListener {
+                if (!it.exists()) {
+                    ref = db.collection(collectionUser).document(otherUID)
+                        .collection("Chats").document(userUID)
+                    ref.get()
+                        .addOnSuccessListener {
+                            // HAS to exist
+                            val colRef = db.collection(collectionUser).document(otherUID)
+                                .collection("Chats").document(userUID)
+                                .collection("Texts")
+                            colRef
+                                .add(text)
+                                .addOnSuccessListener {
+                                    fetchChats(userUID, otherUID, textsList)
+                                }
+                        }
+                } else {
+                    // it exists here
+                    val colRef = db.collection(collectionUser).document(userUID)
+                        .collection("Chats").document(otherUID)
+                        .collection("Texts")
+                    colRef
+                        .add(text)
+                        .addOnSuccessListener {
+                            fetchChats(userUID, otherUID, textsList)
+                        }
+                }
+            }
+    }
+
     fun createNote(
         note: Note,
         notesList: MutableLiveData<List<Note>>,
@@ -289,6 +330,90 @@ class ViewModelDBHelper() {
             }
             .addOnFailureListener { e ->
                 Log.w("XXX", "Error checking user document", e)
+            }
+    }
+
+    fun checkCreateChats(user: FirebaseUser) {
+        val colRef = db.collection(collectionUser).document(user.uid).collection("Chats")
+        colRef.get()
+            .addOnSuccessListener {
+                if (it.isEmpty) {
+                    // must make the collection
+                    colRef.document("dummy").set(hashMapOf<String, Any>())
+                        .addOnFailureListener { e ->
+                            Log.e("XXX", "Error creating chats collection", e)
+                        }
+                }
+            }
+            .addOnFailureListener {
+                Log.w("XXX", "Error getting the Chats collection")
+            }
+    }
+
+    fun fetchChats(userUID: String, otherUID: String, textsList: MutableLiveData<List<Text>>) {
+        var docRef = db.collection(collectionUser).document(userUID)
+            .collection("Chats").document(otherUID)
+        docRef.get()
+            .addOnSuccessListener {
+                if (!it.exists()) {
+                    // check if the chat exists if we index into it the other way
+                    docRef = db.collection(collectionUser).document(otherUID)
+                        .collection("Chats").document(userUID)
+                    docRef.get()
+                        .addOnSuccessListener {
+                            if (!it.exists()) {
+                                // we are creating this document for the first time, it should be named after userUID
+                                // also create a collection within this called "Texts"
+                                val userChatRef = db.collection(collectionUser).document(userUID)
+                                    .collection("Chats").document(otherUID)
+                                userChatRef.set(hashMapOf<String, Any>())
+                                    .addOnSuccessListener {
+                                        Log.d("fetchChats", "Chat document created successfully")
+                                        // Create the "Texts" collection within the chat document
+                                        val textsCollectionRef = userChatRef.collection("Texts")
+                                        textsCollectionRef.get()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("fetchChats", "Error creating chat document", e)
+                                    }
+                            } else {
+                                // chat already existed, there should be existing texts:
+                                val textsCollectionRef = docRef.collection("Texts")
+                                textsCollectionRef.get()
+                                    .addOnSuccessListener { textsSnapshot ->
+                                        val texts = mutableListOf<Text>()
+                                        for (doc in textsSnapshot.documents) {
+                                            // Convert documents to Text objects and add to the list
+                                            val text = doc.toObject(Text::class.java)
+                                            text?.let { texts.add(it) }
+                                        }
+                                        textsList.postValue(texts)
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("fetchChats", "Error fetching existing texts", e)
+                                    }
+                            }
+                        }
+                } else {
+                    // Chat already existed, there should be existing texts:
+                    // Populate a mutable list of Texts with a new Text for each
+                    // document.
+                    val textsCollectionRef = docRef.collection("Texts")
+                    textsCollectionRef.get()
+                        .addOnSuccessListener { textsSnapshot ->
+                            val texts = mutableListOf<Text>()
+                            for (doc in textsSnapshot.documents) {
+                                // Convert documents to Text objects and add to the list
+                                val text = doc.toObject(Text::class.java)
+                                text?.let { texts.add(it) }
+                            }
+                            // Post the list of texts to the MutableLiveData
+                            textsList.postValue(texts)
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("fetchChats", "Error fetching existing texts", e)
+                        }
+                }
             }
     }
 

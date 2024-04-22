@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -68,6 +69,12 @@ class OneUserFragment : Fragment() {
                 binding.followBut.text = "UNFOLLOW"
                 viewModel.addFollowing(user.UID)
             }
+        }
+
+        // Chat feature
+        binding.chatBut.setOnClickListener {
+            val action = OneUserFragmentDirections.actionOneUserToChatFragment(user)
+            findNavController().navigate(action)
         }
     }
 }

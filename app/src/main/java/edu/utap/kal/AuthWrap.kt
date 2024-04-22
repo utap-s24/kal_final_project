@@ -67,6 +67,7 @@ object AuthWrap : FirebaseAuth.AuthStateListener {
             val db = ViewModelDBHelper()
             db.checkAndCreate(firebaseUser)
             db.checkNotesCollection(firebaseUser)
+            db.checkCreateChats(firebaseUser)
         }
     }
     // This override makes us a valid FirebaseAuth.AuthStateListener

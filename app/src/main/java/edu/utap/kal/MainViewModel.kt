@@ -215,4 +215,24 @@ class MainViewModel : ViewModel() {
         val currentUser = AuthWrap.getCurrentUser()
         dbHelp.removeFromFollowing(currentUser.uid, otherUser.UID, followingList)
     }
+
+    ///////////////////////////////////////////////////////////////////////
+    // Chats
+    private var chatHistory = MutableLiveData<List<Text>>()
+    fun sendText(textMessage: String, otherUID: String) {
+        val currentUser = AuthWrap.getCurrentUser()
+        val text = Text(
+            message = textMessage,
+            username = currentUser.name,
+            ownerUID = currentUser.uid,
+            // database sets Timestamp and firestoreID
+        )
+        dbHelp.sendText(text, chatHistory, currentUser.uid, otherUID)
+    }
+    fun fetchInitialChat(userUID: String, otherUID: String) {
+        dbHelp.fetchChats(userUID, otherUID, chatHistory)
+    }
+    fun observeChatHistory(): MutableLiveData<List<Text>> {
+        return chatHistory
+    }
 }

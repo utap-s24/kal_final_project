@@ -34,14 +34,29 @@
             android:textColor="#181C18"
             android:layout_margin="8dp" />
 
-        <Button
-            android:id="@+id/follow_but"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Follow"
-            android:layout_margin="8dp"/>
+            android:orientation="horizontal"
+            android:layout_margin="8dp"
+            android:gravity="center_horizontal">
 
-        <!-- Line partition -->
+            <Button
+                android:id="@+id/follow_but"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Follow"
+                android:layout_weight="3" />
+
+            <Button
+                android:id="@+id/chat_but"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CHAT"
+                android:layout_weight="1"/>
+
+        </LinearLayout>
+
         <View
             android:id="@+id/line_partition"
             android:layout_width="match_parent"
@@ -50,29 +65,6 @@
             android:layout_margin="8dp" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/search_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@id/top_section">
-
-        <EditText
-            android:id="@+id/search_edit"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:hint="Search..."
-            android:textSize="16sp"
-            android:textColor="@android:color/darker_gray"
-            android:layout_margin="8dp" />
-        <ImageView
-            android:id="@+id/search_button"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/baseline_search_24"
-            android:layout_margin="8dp" />
-    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/noteListRV"
@@ -80,6 +72,6 @@
         android:layout_height="0dp"
         android:paddingTop="12dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/search_bar"/>
+        app:layout_constraintTop_toBottomOf="@id/top_section"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
