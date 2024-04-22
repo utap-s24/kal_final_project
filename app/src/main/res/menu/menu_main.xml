@@ -1,0 +1,26 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="edu.cs371m.notebook.view.MainFragment">
+    <item
+        android:id="@+id/menu_feed"
+        android:orderInCategory="100"
+        android:title="Pic"
+        android:icon="@drawable/baseline_apps_24"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:id="@+id/menu_profile"
+        android:orderInCategory="100"
+        android:title="Profile"
+        android:icon="@drawable/baseline_accessibility_new_24"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:id="@+id/menu_logout"
+        android:orderInCategory="100"
+        android:title="Log out"
+        android:icon="@drawable/baseline_arrow_outward_24"
+        app:showAsAction="ifRoom"
+        />
+</menu>

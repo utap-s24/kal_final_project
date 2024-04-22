@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "32499300400",
+    "project_id": "project-kal-87dd9",
+    "storage_bucket": "project-kal-87dd9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:32499300400:android:db7dcc8c31075d84bdd5f5",
+        "android_client_info": {
+          "package_name": "edu.utap.kal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0OWwXXiAy8xZ-hGfzt4fyzXQW1st9J3c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

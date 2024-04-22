@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="edu.utap.kal.view.HomeFragment"
+        android:label="@string/title_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_note_edit"
+            app:destination="@id/noteEditFragment" />
+        <action
+            android:id="@+id/action_navigation_home_to_settings_fragment"
+            app:destination="@+id/settingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/imageRollFragment"
+        android:name="edu.utap.kal.view.ImageRoll"
+        android:label="@string/title_image_roll"
+        tools:layout="@layout/image_roll_fragment" />
+
+    <fragment
+        android:id="@+id/noteEditFragment"
+        android:name="edu.utap.kal.view.NoteEdit"
+        android:label="{title}"
+        tools:layout="@layout/note_edit"
+        >
+        <argument
+            android:name="position"
+            app:argType="integer"
+            android:defaultValue="-1" />
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="New Note"
+            />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="edu.utap.kal.view.SettingsFragment"
+        android:label="Profile"
+        tools:layout="@layout/settings">
+        <action
+            android:id="@+id/action_settings_to_one_user_fragment"
+            app:destination="@id/oneUserFragment" />
+        <action
+            android:id="@+id/action_settings_to_home_fragment"
+            app:destination="@+id/homeFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/oneUserFragment"
+        android:name="edu.utap.kal.view.OneUserFragment"
+        android:label="Explore"
+        tools:layout="@layout/fragment_one_user">
+        <argument
+            android:name="userCard"
+            app:argType="edu.utap.kal.UserCard" />
+<!--        <action-->
+<!--            android:id="@+id/action_one_user_to_settings_fragment"-->
+<!--            app:destination="@+id/settingsFragment" />-->
+    </fragment>
+</navigation>
