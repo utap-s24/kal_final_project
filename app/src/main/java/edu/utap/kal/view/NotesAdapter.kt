@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import edu.utap.kal.AuthWrap
 import edu.utap.kal.MainViewModel
 import edu.utap.kal.R
 import edu.utap.kal.databinding.NoteListRowBinding
@@ -31,7 +32,6 @@ class NotesAdapter(private val viewModel: MainViewModel,
             return oldItem.firestoreID == newItem.firestoreID
                     && oldItem.text == newItem.text
                     && oldItem.ownerUid == newItem.ownerUid
-                    && oldItem.pictureUUIDs == newItem.pictureUUIDs
                     && oldItem.timeStamp == newItem.timeStamp
         }
     }
@@ -93,6 +93,7 @@ class NotesAdapter(private val viewModel: MainViewModel,
             }
         }
         fun bind(holder: VH, position: Int) {
+            // differentiate between whether user is viewing their own notes or others'
             val note = viewModel.getNote(position)
             holder.noteListRowBinding.text.text = note.text
             bindExpanded(position)

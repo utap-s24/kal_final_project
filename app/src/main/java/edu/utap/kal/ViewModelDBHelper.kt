@@ -22,8 +22,9 @@ class ViewModelDBHelper() {
     }
 
     fun fetchInitialNotes(notesList: MutableLiveData<List<Note>>,
+                          userUID: String,
                           callback:()->Unit) {
-        dbFetchNotes(notesList, callback)
+        dbFetchNotes(notesList, userUID, callback)
     }
     /////////////////////////////////////////////////////////////
     // Interact with Firestore db
@@ -34,8 +35,9 @@ class ViewModelDBHelper() {
     // But be careful about how listener updates live data
     // and noteListener?.remove() in onCleared
     private fun dbFetchNotes(notesList: MutableLiveData<List<Note>>,
+                             userUID: String,
                              callback:()->Unit = {}) {
-        db.collection(collectionRoot)
+        db.collection(collectionRoot).document(userUID).collection("Notes")
             .orderBy("timeStamp", Query.Direction.DESCENDING)
             .limit(100)
             .get()
@@ -53,15 +55,33 @@ class ViewModelDBHelper() {
             }
     }
 
+    fun fetchOtherNotes(notesList : MutableLiveData<List<Note>>, userUID: String) {
+        db.collection(collectionRoot).document(userUID).collection("Notes")
+            .orderBy("timeStamp", Query.Direction.DESCENDING)
+            .limit(100)
+            .get()
+            .addOnSuccessListener { result ->
+                Log.d(javaClass.simpleName, "other notes fetch ${result!!.documents.size}")
+                // NB: This is done on a background thread
+                notesList.postValue(result.documents.mapNotNull {
+                    it.toObject(Note::class.java)
+                })
+            }
+            .addOnFailureListener {
+                Log.d(javaClass.simpleName, "other notes fetch FAILED ", it)
+            }
+    }
+
     // After we successfully modify the db, we refetch the contents to update our
     // live data.  Hence the dbFetchNotes() calls below.
     fun updateNote(
         note: Note,
-        notesList: MutableLiveData<List<Note>>
+        notesList: MutableLiveData<List<Note>>,
+        userUID: String
     ) {
         val pictureUUIDs = note.pictureUUIDs
         //SSS
-        db.collection(collectionRoot)
+        db.collection(collectionRoot).document(userUID).collection("Notes")
             .document(note.firestoreID)
             .set(note)
                 //EEE // XXX Writing a note
@@ -70,7 +90,7 @@ class ViewModelDBHelper() {
                     javaClass.simpleName,
                     "Note update \"${elipsizeString(note.text)}\" len ${pictureUUIDs.size} id: ${note.firestoreID}"
                 )
-                dbFetchNotes(notesList)
+                dbFetchNotes(notesList, userUID)
             }
             .addOnFailureListener { e ->
                 Log.d(javaClass.simpleName, "Note update FAILED \"${elipsizeString(note.text)}\"")
@@ -80,19 +100,22 @@ class ViewModelDBHelper() {
 
     fun createNote(
         note: Note,
-        notesList: MutableLiveData<List<Note>>
+        notesList: MutableLiveData<List<Note>>,
+        userUID: String
     ) {
         // We can get ID locally
         // note.firestoreID = db.collection("allNotes").document().id
 
-        db.collection(collectionRoot)
+        val collectionRef = db.collection(collectionRoot).document(userUID).collection("Notes")
+
+        collectionRef
             .add(note)
             .addOnSuccessListener {
                 Log.d(
                     javaClass.simpleName,
                     "Note create \"${elipsizeString(note.text)}\" id: ${note.firestoreID}"
                 )
-                dbFetchNotes(notesList)
+                dbFetchNotes(notesList, userUID)
             }
             .addOnFailureListener { e ->
                 Log.d(javaClass.simpleName, "Note create FAILED \"${elipsizeString(note.text)}\"")
@@ -102,9 +125,10 @@ class ViewModelDBHelper() {
 
     fun removeNote(
         note: Note,
-        notesList: MutableLiveData<List<Note>>
+        notesList: MutableLiveData<List<Note>>,
+        userUID: String
     ) {
-        db.collection(collectionRoot)
+        db.collection(collectionRoot).document(userUID).collection("Notes")
             .document(note.firestoreID)
             .delete()
             .addOnSuccessListener {
@@ -112,7 +136,7 @@ class ViewModelDBHelper() {
                     javaClass.simpleName,
                     "Note delete \"${elipsizeString(note.text)}\" id: ${note.firestoreID}"
                 )
-                dbFetchNotes(notesList)
+                dbFetchNotes(notesList, userUID)
             }
             .addOnFailureListener { e ->
                 Log.d(javaClass.simpleName, "Note deleting FAILED \"${elipsizeString(note.text)}\"")
@@ -266,6 +290,45 @@ class ViewModelDBHelper() {
             .addOnFailureListener { e ->
                 Log.w("XXX", "Error checking user document", e)
             }
+    }
+
+    fun checkNotesCollection(user: FirebaseUser) {
+
+        val docRef = db.collection(collectionRoot).document(user.uid)
+        docRef.get()
+            .addOnSuccessListener {
+                if (!it.exists()) {
+                    // Document doesn't exist, so create it
+                    docRef.set(hashMapOf<String, Any>())
+                        .addOnSuccessListener {
+                            Log.d("XXX", "User document created successfully")
+                            // Create a collection within this called "Notes"
+                            val notesRef = docRef.collection("Notes")
+                            notesRef.get()
+                                .addOnSuccessListener {
+                                    // Create the Notes collection
+                                    if (it.isEmpty) {
+                                        notesRef.add(hashMapOf<String, Any>())
+                                            .addOnSuccessListener {
+                                                Log.d("XXX", "Notes collection created successfully")
+                                            }
+                                            .addOnFailureListener { e ->
+                                                Log.w("XXX", "Error creating Notes collection", e)
+                                            }
+                                    } else {
+                                        Log.d("XXX", "Notes collection already exists")
+                                    }
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.w("XXX", "Error creating Notes collection", e)
+                                }
+                        }
+                        .addOnFailureListener { e ->
+                            Log.w("XXX", "Error creating user document", e)
+                        }
+                }
+            }
+
     }
 
     fun updateName(uid : String, newName : String) {

@@ -66,6 +66,7 @@ object AuthWrap : FirebaseAuth.AuthStateListener {
             // Check if user already exists in database... else, make a document for them
             val db = ViewModelDBHelper()
             db.checkAndCreate(firebaseUser)
+            db.checkNotesCollection(firebaseUser)
         }
     }
     // This override makes us a valid FirebaseAuth.AuthStateListener

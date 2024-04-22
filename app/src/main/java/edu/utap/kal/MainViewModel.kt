@@ -36,6 +36,7 @@ class MainViewModel : ViewModel() {
 
     // live data for following list
     private var followingList = MutableLiveData<List<UserCard>>()
+    private var otherUserNotes = MutableLiveData<List<Note>>()
 
     /////////////////////////////////////////////////////////////
     // Notes adapter.  With navigation, fragments are all
@@ -56,8 +57,20 @@ class MainViewModel : ViewModel() {
 
     /////////////////////////////////////////////////////////////
     // Notes, memory cache and database interaction
-    fun fetchInitialNotes(callback: ()->Unit) {
-        dbHelp.fetchInitialNotes(notesList, callback)
+    fun fetchInitialNotes(userUID : String, callback: ()->Unit) {
+        dbHelp.fetchInitialNotes(notesList, userUID, callback)
+    }
+    fun fetchOtherUserNotes(userUID: String) {
+        dbHelp.fetchOtherNotes(otherUserNotes, userUID)
+    }
+    fun observeOtherUserNotes(): MutableLiveData<List<Note>> {
+        return otherUserNotes
+    }
+    fun getOtherNote(position: Int) : Note {
+        val note = otherUserNotes.value?.get(position)
+        Log.d(javaClass.simpleName, "notesList.value ${notesList.value}")
+        Log.d(javaClass.simpleName, "getNode $position list len ${notesList.value?.size}")
+        return note!!
     }
     fun observeNotes(): LiveData<List<Note>> {
         return notesList
@@ -67,7 +80,10 @@ class MainViewModel : ViewModel() {
     }
     // Get a note from the memory cache
     fun getNote(position: Int) : Note {
-        val note = notesList.value?.get(position)
+        var note = notesList.value?.get(position)
+        if (notesList.value.isNullOrEmpty()) {
+            note = otherUserNotes.value?.get(position)
+        }
         Log.d(javaClass.simpleName, "notesList.value ${notesList.value}")
         Log.d(javaClass.simpleName, "getNode $position list len ${notesList.value?.size}")
         return note!!
@@ -79,7 +95,8 @@ class MainViewModel : ViewModel() {
         // Have to update text before calling updateNote
         note.text = text
         note.pictureUUIDs = pictureUUIDs
-        dbHelp.updateNote(note, notesList)
+        val currentUser = AuthWrap.getCurrentUser()
+        dbHelp.updateNote(note, notesList, currentUser.uid)
     }
     fun createNote(text: String, pictureUUIDs: List<String>) {
         val currentUser = AuthWrap.getCurrentUser()
@@ -90,7 +107,7 @@ class MainViewModel : ViewModel() {
             pictureUUIDs = pictureUUIDs,
             // database sets firestoreID
         )
-        dbHelp.createNote(note, notesList)
+        dbHelp.createNote(note, notesList, currentUser.uid)
     }
     fun removeNoteAt(position: Int) {
         //SSS
@@ -101,7 +118,8 @@ class MainViewModel : ViewModel() {
         }
         //EEE // XXX What do to before we delete note?
         Log.d(javaClass.simpleName, "remote note at pos: $position id: ${note.firestoreID}")
-        dbHelp.removeNote(note, notesList)
+        val currentUser = AuthWrap.getCurrentUser()
+        dbHelp.removeNote(note, notesList, currentUser.uid)
     }
 
     /////////////////////////////////////////////////////////////

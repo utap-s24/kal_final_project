@@ -69,10 +69,10 @@ class MainActivity : AppCompatActivity() {
         // Firestore login, fetch initial
         AuthWrap.signInLauncher = signInLauncher
         AuthWrap.login()
-        binding.indeterminateBar.visibility = View.VISIBLE
-        viewModel.fetchInitialNotes() {
-            binding.indeterminateBar.visibility = View.GONE
-        }
+        binding.indeterminateBar.visibility = View.GONE
+//        viewModel.fetchInitialNotes() {
+//            binding.indeterminateBar.visibility = View.GONE
+//        }
     }
 
     // navigateUp:

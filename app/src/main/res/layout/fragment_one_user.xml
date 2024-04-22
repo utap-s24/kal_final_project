@@ -74,21 +74,6 @@
             android:layout_margin="8dp" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/empty_notes_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="70dp"
-        android:fontFamily="sans-serif-light"
-        android:text="No notes found!"
-        android:textColor="#999"
-        android:textSize="26sp"
-        app:layout_constraintTop_toBottomOf="@id/search_bar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/noteListRV"
         android:layout_width="match_parent"

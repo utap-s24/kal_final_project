@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import edu.utap.kal.AuthWrap
 import edu.utap.kal.MainViewModel
 import edu.utap.kal.R
 import edu.utap.kal.databinding.FragmentHomeBinding
@@ -58,6 +59,9 @@ class HomeFragment :
         binding.fab.setOnClickListener {
             findNavController().navigate(R.id.action_navigation_home_to_navigation_note_edit)
         }
+
+//        val currentUser = AuthWrap.getCurrentUser()
+//        viewModel.fetchInitialNotes(currentUser.uid) {  } // FIND ME
 
         // Long press to edit.
         val adapter = NotesAdapter(viewModel) { position ->

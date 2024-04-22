@@ -53,16 +53,9 @@ class OneUserFragment : Fragment() {
         binding.noteListRV.adapter = adapter
 
         // observe live data
-        viewModel.observeNotes().observe(viewLifecycleOwner) {
-            // Have to change observeNotes so that it observes the posts of the OTHER user.
+        viewModel.fetchOtherUserNotes(user.UID)
+        viewModel.observeOtherUserNotes().observe(viewLifecycleOwner) {
             adapter.submitList(it)
-        }
-        viewModel.observeNotesEmpty().observe(viewLifecycleOwner) {
-            if(it) {
-                binding.emptyNotesView.visibility = View.VISIBLE
-            } else {
-                binding.emptyNotesView.visibility = View.GONE
-            }
         }
         binding.followBut.setOnClickListener {
             val followingList = viewModel.observeFollowingListOnly().value ?: emptyList<UserCard>()
