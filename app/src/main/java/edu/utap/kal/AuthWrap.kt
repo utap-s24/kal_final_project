@@ -42,6 +42,9 @@ object AuthWrap : FirebaseAuth.AuthStateListener {
     fun getCurrentUser(): User {
         return liveUser.value!!
     }
+    fun observeCurrentUser() : MutableLiveData<User> {
+        return liveUser
+    }
     // MainActivity gives this to us, so we can log back in
     // if we are logged out
     lateinit var signInLauncher: ActivityResultLauncher<Intent>
@@ -103,5 +106,6 @@ object AuthWrap : FirebaseAuth.AuthStateListener {
 
     fun logout() {
         Firebase.auth.signOut()
+        login()
     }
 }

@@ -3,13 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="edu.cs371m.notebook.view.MainFragment">
     <item
-        android:id="@+id/menu_feed"
-        android:orderInCategory="100"
-        android:title="Pic"
-        android:icon="@drawable/baseline_apps_24"
-        app:showAsAction="ifRoom"
-        />
-    <item
         android:id="@+id/menu_profile"
         android:orderInCategory="100"
         android:title="Profile"

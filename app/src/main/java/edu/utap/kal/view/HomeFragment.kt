@@ -60,8 +60,13 @@ class HomeFragment :
             findNavController().navigate(R.id.action_navigation_home_to_navigation_note_edit)
         }
 
-//        val currentUser = AuthWrap.getCurrentUser()
-//        viewModel.fetchInitialNotes(currentUser.uid) {  } // FIND ME
+        AuthWrap.observeCurrentUser().observe(viewLifecycleOwner) { user ->
+            if (user != null) {
+                Log.d("XXX", "finally fetching the home fragment's notes")
+                val currentUser = AuthWrap.getCurrentUser()
+                viewModel.fetchInitialNotes(currentUser.uid) {  } // FIND ME
+            }
+        }
 
         // Long press to edit.
         val adapter = NotesAdapter(viewModel) { position ->

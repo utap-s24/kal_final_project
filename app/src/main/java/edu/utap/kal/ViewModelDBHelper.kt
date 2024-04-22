@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.getField
 import edu.utap.kal.model.Note
 
 class ViewModelDBHelper() {
@@ -98,6 +99,15 @@ class ViewModelDBHelper() {
             }
     }
 
+    fun fetchCurrentName(userUID: String, currentName: MutableLiveData<String>) {
+        val docRef = db.collection(collectionUser).document(userUID)
+        docRef.get()
+            .addOnSuccessListener { result ->
+                 if (result.exists()) {
+                     currentName.postValue(result.getString("username"))
+                 }
+            }
+    }
 
     fun sendText(
         text: Text,
@@ -362,6 +372,7 @@ class ViewModelDBHelper() {
                     docRef.get()
                         .addOnSuccessListener {
                             if (!it.exists()) {
+                                Log.d("XXX", "Creating Text Chat for the first time.")
                                 // we are creating this document for the first time, it should be named after userUID
                                 // also create a collection within this called "Texts"
                                 val userChatRef = db.collection(collectionUser).document(userUID)
@@ -380,14 +391,22 @@ class ViewModelDBHelper() {
                                 // chat already existed, there should be existing texts:
                                 val textsCollectionRef = docRef.collection("Texts")
                                 textsCollectionRef.get()
-                                    .addOnSuccessListener { textsSnapshot ->
-                                        val texts = mutableListOf<Text>()
-                                        for (doc in textsSnapshot.documents) {
-                                            // Convert documents to Text objects and add to the list
-                                            val text = doc.toObject(Text::class.java)
-                                            text?.let { texts.add(it) }
+                                    .addOnSuccessListener { result ->
+                                        if (!result.isEmpty) {
+                                            val texts = mutableListOf<Text>()
+                                            for (document in result.documents) {
+                                                val message = document.getString("message")
+                                                val username = document.getString("username")
+                                                Log.d("XXX", "username read from firestore: $username")
+                                                val ownerUID = document.getString("ownerUID")
+                                                val timestamp = document.getTimestamp("timeStamp")
+                                                if (message != null && username != null && ownerUID != null && timestamp != null) {
+                                                    val text = Text(message, username, ownerUID, timestamp)
+                                                    text.let { texts.add(it) }
+                                                }
+                                            }
+                                            textsList.postValue(texts)
                                         }
-                                        textsList.postValue(texts)
                                     }
                                     .addOnFailureListener { e ->
                                         Log.e("fetchChats", "Error fetching existing texts", e)
@@ -400,15 +419,21 @@ class ViewModelDBHelper() {
                     // document.
                     val textsCollectionRef = docRef.collection("Texts")
                     textsCollectionRef.get()
-                        .addOnSuccessListener { textsSnapshot ->
-                            val texts = mutableListOf<Text>()
-                            for (doc in textsSnapshot.documents) {
-                                // Convert documents to Text objects and add to the list
-                                val text = doc.toObject(Text::class.java)
-                                text?.let { texts.add(it) }
+                        .addOnSuccessListener { result ->
+                            if (!result.isEmpty) {
+                                val texts = mutableListOf<Text>()
+                                for (document in result.documents) {
+                                    val message = document.getString("message")
+                                    val username = document.getString("username")
+                                    val ownerUID = document.getString("ownerUID")
+                                    val timestamp = document.getTimestamp("timeStamp")
+                                    if (message != null && username != null && ownerUID != null && timestamp != null) {
+                                        val text = Text(message, username, ownerUID, timestamp)
+                                        text.let { texts.add(it) }
+                                    }
+                                }
+                                textsList.postValue(texts)
                             }
-                            // Post the list of texts to the MutableLiveData
-                            textsList.postValue(texts)
                         }
                         .addOnFailureListener { e ->
                             Log.e("fetchChats", "Error fetching existing texts", e)

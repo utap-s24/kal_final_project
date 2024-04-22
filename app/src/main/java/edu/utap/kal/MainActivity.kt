@@ -1,6 +1,7 @@
 package edu.utap.kal
 
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -8,6 +9,7 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -37,10 +39,6 @@ class MainActivity : AppCompatActivity() {
 
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
-                    R.id.menu_feed -> {
-                        navController.navigate(R.id.imageRollFragment)
-                        true
-                    }
                     R.id.menu_profile -> {
                         navController.navigate(R.id.settingsFragment)
                         true
@@ -73,6 +71,15 @@ class MainActivity : AppCompatActivity() {
 //        viewModel.fetchInitialNotes() {
 //            binding.indeterminateBar.visibility = View.GONE
 //        }
+
+
+        AuthWrap.observeCurrentUser().observe(this) { user ->
+            if (user != null) {
+                Log.d("XXX", "finally fetching the home fragment's notes")
+                val currentUser = AuthWrap.getCurrentUser()
+                viewModel.fetchInitialNotes(currentUser.uid) {  } // FIND ME
+            }
+        }
     }
 
     // navigateUp:

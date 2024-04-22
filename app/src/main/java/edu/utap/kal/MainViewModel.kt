@@ -42,11 +42,30 @@ class MainViewModel : ViewModel() {
     // Notes adapter.  With navigation, fragments are all
     // recycled aggressively, so state must live in viewModel
     fun isExpanded(position: Int) : Boolean {
-        val id = notesList.value?.get(position)?.firestoreID ?: ""
+        val id = if (notesList.value.isNullOrEmpty()) {
+            otherUserNotes.value?.get(position)?.firestoreID ?: ""
+        } else {
+            val notesListSize = notesList.value?.size ?: 0
+            if (position < notesListSize) {
+                notesList.value?.get(position)?.firestoreID ?: ""
+            } else {
+                otherUserNotes.value?.get(position)?.firestoreID ?: ""
+            }
+        }
+
         return expandedMap[id] == true
     }
     fun isExpandable(position: Int) : Boolean {
-        return notesList.value?.get(position)?.pictureUUIDs?.isNotEmpty() ?: false
+        if (notesList.value.isNullOrEmpty()) {
+            return otherUserNotes.value?.get(position)?.pictureUUIDs?.isNotEmpty() ?: false
+        } else {
+            val notesListSize = notesList.value?.size ?: 0
+            if (position < notesListSize) {
+                return notesList.value?.get(position)?.pictureUUIDs?.isNotEmpty() ?: false
+            } else {
+                return otherUserNotes.value?.get(position)?.pictureUUIDs?.isNotEmpty() ?: false
+            }
+        }
     }
     fun toggleExpanded(position: Int) {
         if( isExpandable(position) ) {
@@ -80,9 +99,16 @@ class MainViewModel : ViewModel() {
     }
     // Get a note from the memory cache
     fun getNote(position: Int) : Note {
-        var note = notesList.value?.get(position)
-        if (notesList.value.isNullOrEmpty()) {
-            note = otherUserNotes.value?.get(position)
+
+        var note = if (notesList.value.isNullOrEmpty()) {
+            otherUserNotes.value?.get(position)
+        } else {
+            val notesListSize = notesList.value?.size ?: 0
+            if (position < notesListSize) {
+                notesList.value?.get(position)
+            } else {
+                otherUserNotes.value?.get(position)
+            }
         }
         Log.d(javaClass.simpleName, "notesList.value ${notesList.value}")
         Log.d(javaClass.simpleName, "getNode $position list len ${notesList.value?.size}")
@@ -219,11 +245,21 @@ class MainViewModel : ViewModel() {
     ///////////////////////////////////////////////////////////////////////
     // Chats
     private var chatHistory = MutableLiveData<List<Text>>()
+    private var currentName = MutableLiveData<String>()
+    fun fetchName(ownUID: String) {
+        dbHelp.fetchCurrentName(ownUID, currentName)
+    }
+    fun observeCurrentName() : MutableLiveData<String> {
+        return currentName
+    }
     fun sendText(textMessage: String, otherUID: String) {
         val currentUser = AuthWrap.getCurrentUser()
+        dbHelp.fetchCurrentName(currentUser.uid, currentName)
+        val username = currentName.value ?: "Guest"
+        Log.d("XXX", "WHAT username do we have right now?: $username")
         val text = Text(
             message = textMessage,
-            username = currentUser.name,
+            username = username,
             ownerUID = currentUser.uid,
             // database sets Timestamp and firestoreID
         )
