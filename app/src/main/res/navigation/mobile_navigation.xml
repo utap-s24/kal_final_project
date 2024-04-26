@@ -16,6 +16,9 @@
         <action
             android:id="@+id/action_navigation_home_to_settings_fragment"
             app:destination="@+id/settingsFragment" />
+        <action
+            android:id="@+id/action_navigateion_home_to_map"
+            app:destination="@id/mapViewFragment" />
     </fragment>
 
     <fragment
@@ -79,4 +82,13 @@
             android:name="userCard"
             app:argType="edu.utap.kal.UserCard" />
     </fragment>
+
+    <fragment
+        android:id="@+id/mapViewFragment"
+        android:name="edu.utap.kal.view.MapViewFragment"
+        android:label="Map View"
+        tools:layout="">
+
+    </fragment>
+
 </navigation>

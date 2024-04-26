@@ -7,8 +7,10 @@ import androidx.lifecycle.MutableLiveData
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.getField
+import com.google.type.LatLng
 import edu.utap.kal.model.Note
 
 class ViewModelDBHelper() {
@@ -22,6 +24,34 @@ class ViewModelDBHelper() {
         return string.substring(0..9) + "..."
     }
 
+    fun fetchLocations(userUID: String,
+                       locationsList: MutableLiveData<List<GeoPoint>>) {
+        db.collection(collectionRoot).document(userUID).collection("Notes")
+            .limit(25)
+            .get()
+            .addOnSuccessListener { result ->
+                Log.d(javaClass.simpleName, "allNotes fetch ${result!!.documents.size}")
+                // Iterate through each document in the collection
+                // Add every LatLng ("location") value to my latlng list
+                // post value of this new list to locationsList
+                val newList = mutableListOf<GeoPoint>()
+                for (document in result.documents) {
+                    val tempLocation = document.getGeoPoint("location")
+                    // Check if tempLocation is null
+                    if (tempLocation != null && !(tempLocation.latitude == 0.0 && tempLocation.longitude == 0.0)) {
+                        val latLng = GeoPoint(
+                            tempLocation.latitude,
+                            tempLocation.longitude
+                        )
+                        newList.add(latLng)
+                    }
+                }
+                locationsList.postValue(newList)
+            }
+            .addOnFailureListener {
+                Log.d(javaClass.simpleName, "fetchLocations FAILED ", it)
+            }
+    }
     fun fetchInitialNotes(notesList: MutableLiveData<List<Note>>,
                           userUID: String,
                           callback:()->Unit) {
@@ -45,6 +75,20 @@ class ViewModelDBHelper() {
             .addOnSuccessListener { result ->
                 Log.d(javaClass.simpleName, "allNotes fetch ${result!!.documents.size}")
                 // NB: This is done on a background thread
+
+//                var newList = mutableListOf<Note>()
+//                for (document in result.documents) {
+//                    val note = Note(
+//                        name = document.getString("name"),
+//                        ownerUid = document.getString("ownerUID"),
+//                        text = document.getString("text"),
+//                        pictureUUIDs = document.getString("pictureUUIDs"),
+//                        category = document.getString("category"),
+//                        location = document.getGeoPoint("location")
+//                    )
+//                }
+//                notesList.postValue(newList)
+
                 notesList.postValue(result.documents.mapNotNull {
                     it.toObject(Note::class.java)
                 })
@@ -78,7 +122,7 @@ class ViewModelDBHelper() {
     fun updateNote(
         note: Note,
         notesList: MutableLiveData<List<Note>>,
-        userUID: String
+        userUID: String,
     ) {
         val pictureUUIDs = note.pictureUUIDs
         //SSS

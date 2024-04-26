@@ -1,5 +1,10 @@
 package edu.utap.kal.view
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -8,15 +13,34 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PointOfInterest
+import com.google.firebase.firestore.GeoPoint
 import edu.utap.kal.MainViewModel
 import edu.utap.kal.R
 import edu.utap.kal.databinding.NoteEditBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class NoteEdit :
     Fragment(R.layout.note_edit) {
@@ -31,9 +55,9 @@ class NoteEdit :
     private var position = -1
     private val viewModel: MainViewModel by activityViewModels()
     private val args: NoteEditArgs by navArgs()
-    // It is a real bummer that we must initialize a registerForActivityResult
-    // here or in onViewCreated.  You CAN'T initialize it in an onClickListener
-    // where it could capture state like the file name.
+    private lateinit var map: GoogleMap
+    private lateinit var geocoder: Geocoder
+    private var locationPermissionGranted = false
     private val cameraLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
@@ -65,12 +89,63 @@ class NoteEdit :
             }
         }, viewLifecycleOwner)
     }
+
+    private fun checkGooglePlayServices() {
+        val googleApiAvailability = GoogleApiAvailability.getInstance()
+        val resultCode =
+            googleApiAvailability.isGooglePlayServicesAvailable(requireContext())
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (googleApiAvailability.isUserResolvableError(resultCode)) {
+                googleApiAvailability.getErrorDialog(this, resultCode, 257)?.show()
+            } else {
+                Log.i(javaClass.simpleName,
+                    "This device must install Google Play Services.")
+            }
+        }
+    }
+
+    private fun requestPermission() {
+        val locationPermissionRequest = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            when {
+                permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
+                    locationPermissionGranted = true
+                } else -> {
+                Toast.makeText(context,
+                    "Unable to show location - permission required",
+                    Toast.LENGTH_LONG).show()
+            }
+            }
+        }
+        locationPermissionRequest.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+    }
+
+    private fun processLocation(location: String): GeoPoint {
+        Log.d("XXX", "ProcessLocation is called")
+        val addresses = Geocoder(requireContext()).getFromLocationName(location, 1)
+        var retAddress: GeoPoint
+        if (!addresses.isNullOrEmpty()) {
+            val address = addresses[0]
+            retAddress = GeoPoint(address.latitude, address.longitude)
+        } else {
+            Toast.makeText(requireContext(), "Was not a valid location.", Toast.LENGTH_LONG).show()
+            retAddress = GeoPoint(0.0, 0.0)
+        }
+        return retAddress
+    }
+
     // No need for onCreateView because we passed R.layout to Fragment constructor
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = NoteEditBinding.bind(view)
         initMenu()
         position = args.position
+
+        // Google Maps work
+        checkGooglePlayServices()
+        requestPermission()
+
         pictureUUIDs = if(position == -1) {
             listOf()
         } else {
@@ -96,16 +171,18 @@ class NoteEdit :
         binding.saveButton.setOnClickListener {
             val inputText = binding.inputET.text.toString()
             if (inputText.isEmpty()) {
-                Toast.makeText(activity,
-                        "Enter note!",
-                        Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "Enter note!", Toast.LENGTH_LONG).show()
             } else {
-                if(position == -1) {
-                    Log.d(javaClass.simpleName, "create note len ${pictureUUIDs.size} pos $position")
-                    viewModel.createNote(inputText, pictureUUIDs)
+                val locationVal = binding.geocoderEditText.text.toString()
+                var locationGeopoint = GeoPoint(0.0, 0.0)
+                if (locationVal.isNotEmpty()) {
+                    locationGeopoint = processLocation(locationVal)
+                }
+
+                if (position == -1) {
+                    viewModel.createNote(inputText, pictureUUIDs, locationGeopoint)
                 } else {
-                    Log.d(javaClass.simpleName, "update list len ${pictureUUIDs.size} pos $position")
-                    viewModel.updateNote(position, inputText, pictureUUIDs)
+                    viewModel.updateNote(position, inputText, pictureUUIDs, locationGeopoint)
                 }
                 findNavController().popBackStack()
             }

@@ -6,6 +6,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.firestore.GeoPoint
 import edu.utap.kal.glide.Glide
 import edu.utap.kal.model.Note
 import edu.utap.kal.view.TakePictureWrapper
@@ -116,21 +118,23 @@ class MainViewModel : ViewModel() {
     }
     // After we successfully modify the db, we refetch the contents to update our
     // live data.  Hence we always pass in notesList
-    fun updateNote(position: Int, text: String, pictureUUIDs: List<String>) {
+    fun updateNote(position: Int, text: String, pictureUUIDs: List<String>, location: GeoPoint) {
         val note = getNote(position)
         // Have to update text before calling updateNote
         note.text = text
         note.pictureUUIDs = pictureUUIDs
+//        note.location = location
         val currentUser = AuthWrap.getCurrentUser()
         dbHelp.updateNote(note, notesList, currentUser.uid)
     }
-    fun createNote(text: String, pictureUUIDs: List<String>) {
+    fun createNote(text: String, pictureUUIDs: List<String>, location: GeoPoint) {
         val currentUser = AuthWrap.getCurrentUser()
         val note = Note(
             name = currentUser.name,
             ownerUid = currentUser.uid,
             text = text,
             pictureUUIDs = pictureUUIDs,
+//            location = location
             // database sets firestoreID
         )
         dbHelp.createNote(note, notesList, currentUser.uid)
@@ -146,6 +150,17 @@ class MainViewModel : ViewModel() {
         Log.d(javaClass.simpleName, "remote note at pos: $position id: ${note.firestoreID}")
         val currentUser = AuthWrap.getCurrentUser()
         dbHelp.removeNote(note, notesList, currentUser.uid)
+    }
+
+    ////////////////////////////////////////////////////////////
+    // Google Maps
+    private var locationsList = MutableLiveData<List<GeoPoint>>()
+    fun fetchLocations() {
+        val currentUser = AuthWrap.getCurrentUser()
+        dbHelp.fetchLocations(currentUser.uid, locationsList)
+    }
+    fun observeLocations() : MutableLiveData<List<GeoPoint>> {
+        return locationsList
     }
 
     /////////////////////////////////////////////////////////////
