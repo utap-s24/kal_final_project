@@ -123,7 +123,7 @@ class MainViewModel : ViewModel() {
         // Have to update text before calling updateNote
         note.text = text
         note.pictureUUIDs = pictureUUIDs
-//        note.location = location
+        note.location = location
         val currentUser = AuthWrap.getCurrentUser()
         dbHelp.updateNote(note, notesList, currentUser.uid)
     }
@@ -134,7 +134,7 @@ class MainViewModel : ViewModel() {
             ownerUid = currentUser.uid,
             text = text,
             pictureUUIDs = pictureUUIDs,
-//            location = location
+            location = location
             // database sets firestoreID
         )
         dbHelp.createNote(note, notesList, currentUser.uid)

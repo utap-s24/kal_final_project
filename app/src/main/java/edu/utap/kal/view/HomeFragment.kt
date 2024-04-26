@@ -59,9 +59,9 @@ class HomeFragment :
         binding.fab.setOnClickListener {
             findNavController().navigate(R.id.action_navigation_home_to_navigation_note_edit)
         }
-//        binding.mapViewBut.setOnClickListener {
-//            findNavController().navigate(R.id.action_navigateion_home_to_map)
-//        }
+        binding.mapViewBut.setOnClickListener {
+            findNavController().navigate(R.id.action_navigateion_home_to_map)
+        }
 
         AuthWrap.observeCurrentUser().observe(viewLifecycleOwner) { user ->
             if (user != null) {

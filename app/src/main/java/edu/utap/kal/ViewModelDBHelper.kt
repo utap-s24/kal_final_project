@@ -36,14 +36,20 @@ class ViewModelDBHelper() {
                 // post value of this new list to locationsList
                 val newList = mutableListOf<GeoPoint>()
                 for (document in result.documents) {
-                    val tempLocation = document.getGeoPoint("location")
-                    // Check if tempLocation is null
-                    if (tempLocation != null && !(tempLocation.latitude == 0.0 && tempLocation.longitude == 0.0)) {
-                        val latLng = GeoPoint(
-                            tempLocation.latitude,
-                            tempLocation.longitude
-                        )
-                        newList.add(latLng)
+                    // Have to parse this separately, convert map to Geopoint
+                    val locationValue = document.get("location")
+                    var geopoint : GeoPoint
+                    if (locationValue is Map<*, *>) {
+                        val latitude = locationValue["latitude"] as? Double ?: 0.0
+                        val longitude = locationValue["longitude"] as? Double ?: 0.0
+                        geopoint = GeoPoint(latitude, longitude)
+                    } else {
+                        geopoint = GeoPoint(0.0, 0.0)
+                    }
+
+                    // We don't want the 0, 0 values since that was just the default
+                    if (!(geopoint.latitude == 0.0 && geopoint.longitude == 0.0)) {
+                        newList.add(geopoint)
                     }
                 }
                 locationsList.postValue(newList)
@@ -76,22 +82,34 @@ class ViewModelDBHelper() {
                 Log.d(javaClass.simpleName, "allNotes fetch ${result!!.documents.size}")
                 // NB: This is done on a background thread
 
-//                var newList = mutableListOf<Note>()
-//                for (document in result.documents) {
-//                    val note = Note(
-//                        name = document.getString("name"),
-//                        ownerUid = document.getString("ownerUID"),
-//                        text = document.getString("text"),
-//                        pictureUUIDs = document.getString("pictureUUIDs"),
-//                        category = document.getString("category"),
-//                        location = document.getGeoPoint("location")
-//                    )
-//                }
-//                notesList.postValue(newList)
+                var newList = mutableListOf<Note>()
+                for (document in result.documents) {
+                    // Have to parse this separately, convert map to Geopoint
+                    val locationValue = document.get("location")
+                    var geopoint : GeoPoint
+                    if (locationValue is Map<*, *>) {
+                        val latitude = locationValue["latitude"] as? Double ?: 0.0
+                        val longitude = locationValue["longitude"] as? Double ?: 0.0
+                         geopoint = GeoPoint(latitude, longitude)
+                    } else {
+                        geopoint = GeoPoint(0.0, 0.0)
+                    }
 
-                notesList.postValue(result.documents.mapNotNull {
-                    it.toObject(Note::class.java)
-                })
+                    val note = Note(
+                        name = document.getString("name")?: "",
+                        ownerUid = document.getString("ownerUID")?: userUID,
+                        text = document.getString("text")?: "",
+                        pictureUUIDs = document.get("pictureUUIDs") as? List<String> ?: emptyList(),
+                        category = document.getString("category")?: "",
+                        location = geopoint
+                    )
+                    newList.add(note)
+                }
+                notesList.postValue(newList)
+
+//                notesList.postValue(result.documents.mapNotNull {
+//                    it.toObject(Note::class.java)
+//                })
                 callback()
             }
             .addOnFailureListener {

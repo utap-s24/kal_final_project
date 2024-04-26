@@ -9,7 +9,10 @@
         android:label="Kal"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        >
+        <meta-data android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBcq2y_LYJgXl942KYOOSYw47zppF3INNE"/>
         <provider
             android:authorities="edu.utap.kal"
             android:name="androidx.core.content.FileProvider"
