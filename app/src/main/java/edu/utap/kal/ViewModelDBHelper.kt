@@ -44,11 +44,13 @@ class ViewModelDBHelper() {
                         val longitude = locationValue["longitude"] as? Double ?: 0.0
                         geopoint = GeoPoint(latitude, longitude)
                     } else {
-                        geopoint = GeoPoint(0.0, 0.0)
+                        Log.d("XXX", "location being computed as 0")
+                        geopoint = document.getGeoPoint("location")?: GeoPoint(0.0, 0.0)
                     }
 
                     // We don't want the 0, 0 values since that was just the default
                     if (!(geopoint.latitude == 0.0 && geopoint.longitude == 0.0)) {
+                        Log.d("XXX", "locs are being added to the list")
                         newList.add(geopoint)
                     }
                 }

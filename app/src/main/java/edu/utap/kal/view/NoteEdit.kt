@@ -33,6 +33,7 @@ import com.google.android.gms.maps.model.PointOfInterest
 import com.google.firebase.firestore.GeoPoint
 import edu.utap.kal.MainViewModel
 import edu.utap.kal.R
+import edu.utap.kal.ViewModelDBHelper
 import edu.utap.kal.databinding.NoteEditBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +56,6 @@ class NoteEdit :
     private var position = -1
     private val viewModel: MainViewModel by activityViewModels()
     private val args: NoteEditArgs by navArgs()
-    private lateinit var map: GoogleMap
     private lateinit var geocoder: Geocoder
     private var locationPermissionGranted = false
     private val cameraLauncher = registerForActivityResult(
@@ -77,11 +77,9 @@ class NoteEdit :
         }
     }
 
-    // Get rid of image roll menu icon
     private fun initMenu() {
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                // No image roll menu in image roll fragment
                 menu.clear()
             }
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
@@ -135,6 +133,26 @@ class NoteEdit :
         return retAddress
     }
 
+    // use geocoder to revert the coordinates back to a string, will show the official one this time
+    private fun addressFromCoordinates(latitude: Double, longitude: Double): String? {
+        val geocoder = Geocoder(requireContext())
+        var addressText: String? = null
+
+        val addresses: List<Address>? = geocoder.getFromLocation(latitude, longitude, 1)
+        if (!addresses.isNullOrEmpty()) {
+            val address: Address = addresses[0]
+            val sb = StringBuilder()
+            for (i in 0 until address.maxAddressLineIndex) {
+                sb.append(address.getAddressLine(i)).append(", ")
+            }
+            sb.append(address.postalCode).append(", ")
+            sb.append(address.countryName)
+            addressText = sb.toString()
+        }
+
+        return addressText
+    }
+
     // No need for onCreateView because we passed R.layout to Fragment constructor
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -150,7 +168,14 @@ class NoteEdit :
             listOf()
         } else {
             val note = viewModel.getNote(position)
+            Log.d("XXX", "location; ${note.location.latitude}, and more: ${note.location.longitude}.")
+            // restore state of the text boxes
             binding.inputET.text.insert(0, note.text)
+            if (!(note.location.longitude == 0.0 && note.location.latitude == 0.0)) {
+                val addressName = addressFromCoordinates(note.location.latitude, note.location.longitude)
+                Log.d("XXX", "restoring an address name: $addressName")
+                binding.geocoderEditText.text.insert(0, addressName)
+            }
             note.pictureUUIDs
         }
         // Put cursor in edit text

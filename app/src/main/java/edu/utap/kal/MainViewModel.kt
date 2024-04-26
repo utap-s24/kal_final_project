@@ -138,6 +138,13 @@ class MainViewModel : ViewModel() {
             // database sets firestoreID
         )
         dbHelp.createNote(note, notesList, currentUser.uid)
+
+        // handle maps
+        if (location.latitude != 0.0 || location.longitude != 0.0) {
+            val currentList : MutableList<GeoPoint> = locationsList.value?.toMutableList()?: mutableListOf<GeoPoint>()
+            currentList.add(location)
+            locationsList.value = currentList
+        }
     }
     fun removeNoteAt(position: Int) {
         //SSS
@@ -157,6 +164,7 @@ class MainViewModel : ViewModel() {
     private var locationsList = MutableLiveData<List<GeoPoint>>()
     fun fetchLocations() {
         val currentUser = AuthWrap.getCurrentUser()
+        Log.d("XXX", "is fetch locations called?")
         dbHelp.fetchLocations(currentUser.uid, locationsList)
     }
     fun observeLocations() : MutableLiveData<List<GeoPoint>> {

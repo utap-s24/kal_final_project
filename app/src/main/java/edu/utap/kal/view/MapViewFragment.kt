@@ -3,6 +3,7 @@ package edu.utap.kal.view
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -89,6 +90,7 @@ class MapViewFragment : Fragment (R.layout.map_view), OnMapReadyCallback {
         viewModel.observeLocations().observe(viewLifecycleOwner) {
             if (it.isNotEmpty()) {
                 locationMarkers = it.toMutableList()
+                Log.d("XXX", "the markers include: ${locationMarkers}")
 
                 // If the map has already been created, only THEN do the markers logic
                 if (this::map.isInitialized) {
