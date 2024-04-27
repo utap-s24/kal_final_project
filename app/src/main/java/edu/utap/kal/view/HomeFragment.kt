@@ -43,7 +43,7 @@ class HomeFragment :
                                       direction: Int) {
                     val position = getPos(viewHolder)
                     Log.d(javaClass.simpleName, "Swipe delete $position")
-                    viewModel.removeNoteAt(position)
+//                    viewModel.removeNoteAt(position)
                 }
             }
         return ItemTouchHelper(simpleItemTouchCallback)

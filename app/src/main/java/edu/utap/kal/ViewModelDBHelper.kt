@@ -1,5 +1,6 @@
 package edu.utap.kal
 
+import android.icu.text.SimpleDateFormat
 import android.text.SpannableString
 import android.util.Log
 import android.widget.EditText
@@ -103,7 +104,8 @@ class ViewModelDBHelper() {
                         text = document.getString("text")?: "",
                         pictureUUIDs = document.get("pictureUUIDs") as? List<String> ?: emptyList(),
                         category = document.getString("category")?: "",
-                        location = geopoint
+                        location = geopoint,
+                        timeStamp = document.getTimestamp("timeStamp")
                     )
                     newList.add(note)
                 }
@@ -147,7 +149,7 @@ class ViewModelDBHelper() {
         val pictureUUIDs = note.pictureUUIDs
         //SSS
         db.collection(collectionRoot).document(userUID).collection("Notes")
-            .document(note.firestoreID)
+            .document(note.firestoreID) //
             .set(note)
                 //EEE // XXX Writing a note
             .addOnSuccessListener {

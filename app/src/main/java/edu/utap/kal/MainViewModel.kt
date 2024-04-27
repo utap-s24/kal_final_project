@@ -57,7 +57,7 @@ class MainViewModel : ViewModel() {
 
         return expandedMap[id] == true
     }
-    fun isExpandable(position: Int) : Boolean {
+    private fun isExpandable(position: Int) : Boolean {
         if (notesList.value.isNullOrEmpty()) {
             return otherUserNotes.value?.get(position)?.pictureUUIDs?.isNotEmpty() ?: false
         } else {
@@ -94,6 +94,7 @@ class MainViewModel : ViewModel() {
         return note!!
     }
     fun observeNotes(): LiveData<List<Note>> {
+        Log.d("XXX", "Notes list currently has: ${notesList.value?.size}")
         return notesList
     }
     fun observeNotesEmpty(): LiveData<Boolean> {

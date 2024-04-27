@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.firebase.Timestamp
 import edu.utap.kal.AuthWrap
 import edu.utap.kal.MainViewModel
 import edu.utap.kal.R
@@ -64,39 +65,33 @@ class NotesAdapter(private val viewModel: MainViewModel,
                 //pic1IV.background = ColorDrawable(Color.WHITE)
             }
         }
-        private fun bindExpanded(position: Int) {
-            if(!viewModel.isExpandable(position)) {
-                noteListRowBinding.chevron.setImageResource(R.drawable.ic_chevron_right_black_24dp)
-                noteListRowBinding.chevron.alpha = 0.3f
-                noteListRowBinding.noteRowRV.visibility = View.GONE
-                return
-            }
-            if(viewModel.isExpanded(position)) {
-                noteListRowBinding.chevron.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp)
-                noteListRowBinding.noteRowRV.visibility = View.VISIBLE
-            } else {
-                noteListRowBinding.chevron.setImageResource(R.drawable.ic_chevron_right_black_24dp)
-                noteListRowBinding.noteRowRV.visibility = View.GONE
-            }
-        }
         init {
             noteListRowBinding.noteRowRV.layoutManager =
                 StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
-            noteListRowBinding.text.setOnLongClickListener {
-                editNote?.let { it1 -> it1(getPos(this)) }
-                true
-            }
-            noteListRowBinding.chevron.setOnClickListener {
-                val position = getPos(this)
-                viewModel.toggleExpanded(position)
-                bindExpanded(position)
-            }
+
+//            noteListRowBinding.deleteBut.setOnClickListener {
+//                editNote?.let { it1 -> it1(getPos(this)) }
+//                true
+//            }
+
         }
         fun bind(holder: VH, position: Int) {
             // differentiate between whether user is viewing their own notes or others'
             val note = viewModel.getNote(position)
             holder.noteListRowBinding.text.text = note.text
-            bindExpanded(position)
+
+            // parse the timeStamp to look nice
+            val timeStamp: Timestamp? = note.timeStamp
+            val outputFormat = SimpleDateFormat("MMMM dd, yyyy HH:mm:ss", Locale.ENGLISH)
+            val formattedDate = if (timeStamp != null) {
+                val date = Date(timeStamp.seconds * 1000 + timeStamp.nanoseconds / 1000000)
+                outputFormat.format(date)
+            } else {
+                null
+            }
+            holder.noteListRowBinding.timestamp.text = formattedDate
+
+
             bindPic1(note.pictureUUIDs)
             //Log.d(javaClass.simpleName, "bind adapter ${bindingAdapterPosition}")
             val adapter = ImageAdapter(viewModel)
